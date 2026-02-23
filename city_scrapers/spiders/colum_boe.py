@@ -1,23 +1,25 @@
+import random
 from urllib import response
+
+import scrapy
 from city_scrapers_core.constants import NOT_CLASSIFIED
 from city_scrapers_core.items import Meeting
 from city_scrapers_core.spiders import CityScrapersSpider
-import random
-import scrapy
 
 
 class ColumBoeSpider(CityScrapersSpider):
     name = "colum_boe"
     agency = "Columbus Board of Education"
     timezone = "America/Chicago"
-    api_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeetingsList?open&0.{random_digit}" # noqa
-    detail_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeeting?open&0.{random_digit}" # noqa
+    api_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeetingsList?open&0.{random_digit}"  # noqa
+    detail_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeeting?open&0.{random_digit}"  # noqa
     boarddocs_committee_id = "A9HCVU32F33A"
-
 
     def start_requests(self):
         yield scrapy.Request(
-            url=self.api_url.format(random_digit=random.randint(1000000000000000, 9999999999999999)),
+            url=self.api_url.format(
+                random_digit=random.randint(1000000000000000, 9999999999999999)
+            ),
             method="POST",
             body=f"current_committee_id={self.boarddocs_committee_id}",
             callback=self._parse_meetings_list,
@@ -26,7 +28,7 @@ class ColumBoeSpider(CityScrapersSpider):
     custom_settings = {
         "ROBOTSTXT_OBEY": False,
     }
-    
+
     def _parse_meetings_list(self, response):
 
         meetings = response.json()
@@ -70,8 +72,6 @@ class ColumBoeSpider(CityScrapersSpider):
         yield self._parse_description(response)
         yield self._parse_classification(response)
 
-
-
     def _parse_title(self, item):
         """Parse or generate meeting title."""
         title = item.css(".meeting-name::text").get()
@@ -80,7 +80,7 @@ class ColumBoeSpider(CityScrapersSpider):
 
     def _parse_description(self, item):
         """Parse or generate meeting description."""
-        description= item.css(".meeting-description::text").getall()
+        description = item.css(".meeting-description::text").getall()
         print("DESCRIPTION >>>> : ", description)
         return ""
 
