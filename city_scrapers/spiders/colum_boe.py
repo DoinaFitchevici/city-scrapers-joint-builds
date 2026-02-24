@@ -1,12 +1,10 @@
-from turtle import title
-from urllib.parse import urlencode
+import random
+
+import scrapy
 from city_scrapers_core.constants import BOARD, PASSED
 from city_scrapers_core.items import Meeting
 from city_scrapers_core.spiders import CityScrapersSpider
-import random
-import scrapy
 from dateutil.parser import parse
-import re
 
 
 class ColumBoeSpider(CityScrapersSpider):
@@ -19,8 +17,8 @@ class ColumBoeSpider(CityScrapersSpider):
     api_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeetingsList?open&0.{random_digit}"  # noqa
     detail_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetMeeting?open&0.{random_digit}"  # noqa
 
-    get_agenda_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetAgenda?open&0.{random_digit}"
-    agenda_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/goto?open&id={attachment_id}" # noqa
+    get_agenda_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/BD-GetAgenda?open&0.{random_digit}"  # noqa
+    agenda_url = "https://go.boarddocs.com/oh/columbus/Board.nsf/goto?open&id={attachment_id}"  # noqa
 
     boarddocs_committee_id = "A9HCVU32F33A"
 
@@ -62,7 +60,6 @@ class ColumBoeSpider(CityScrapersSpider):
             meta={"detail_response": response, "raw_description": raw_description},
             callback=self.parse,
         )
-      
 
     def parse(self, response):
         detail_response = response.meta["detail_response"]
@@ -95,7 +92,6 @@ class ColumBoeSpider(CityScrapersSpider):
 
     def _parse_start(self, raw_description, detail_response):
         date = detail_response.css(".meeting-date::text").get()
-       
         return parse(date)
 
     def _parse_location(self, detail_response, raw_description):
@@ -104,7 +100,7 @@ class ColumBoeSpider(CityScrapersSpider):
         if "board" in title_location and "special" not in title_location:
             return {
                 "name": "COLUMBUS CITY SCHOOLS",
-                "address": "3700 S. HIGH ST. COLUMBUS, OH 43207"
+                "address": "3700 S. HIGH ST. COLUMBUS, OH 43207",
             }
         return {
             "address": "",
@@ -114,4 +110,13 @@ class ColumBoeSpider(CityScrapersSpider):
     def _parse_links(self, item):
         agenda_id = item.css("li.XXXXXXui-corner-all::attr(unique)").get()
 
-        return [{"title": "Agenda", "href": self.agenda_url.format(attachment_id=agenda_id)}] if agenda_id else [] # noqa
+        return (
+            [
+                {
+                    "title": "Agenda",
+                    "href": self.agenda_url.format(attachment_id=agenda_id),
+                }
+            ]
+            if agenda_id
+            else []
+        )  # noqa
