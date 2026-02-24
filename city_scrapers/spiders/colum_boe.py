@@ -5,6 +5,7 @@ import scrapy
 from city_scrapers_core.constants import NOT_CLASSIFIED
 from city_scrapers_core.items import Meeting
 from city_scrapers_core.spiders import CityScrapersSpider
+from dateutil.parser import parse
 
 
 class ColumBoeSpider(CityScrapersSpider):
@@ -68,9 +69,10 @@ class ColumBoeSpider(CityScrapersSpider):
         #     meeting["status"] = self._get_status(meeting)
         #     meeting["id"] = self._get_id(meeting)
 
-        yield self._parse_title(response)
-        yield self._parse_description(response)
-        yield self._parse_classification(response)
+        # yield self._parse_title(response)
+        # yield self._parse_description(response)
+        # yield self._parse_classification(response)
+        yield self._parse_start(response)
 
     def _parse_title(self, item):
         """Parse or generate meeting title."""
@@ -96,7 +98,15 @@ class ColumBoeSpider(CityScrapersSpider):
 
     def _parse_start(self, item):
         """Parse start datetime as a naive datetime object."""
-        return None
+        date = item.css(".meeting-date::text").get()
+        print("DATE >>>> : ", date)
+        parsed_date = parse(date)
+        print("PARSED DATE >>>> : ", parsed_date)
+        description = item.css(".meeting-description::text").getall()
+        # print("DESCRIPTION >>>> : ", description)
+        # parsed_time = parse(time)
+        print("PARSED TIME >>>> : ", description)
+        # return parsed_date
 
     def _parse_end(self, item):
         """Parse end datetime as a naive datetime object. Added by pipeline if None"""
