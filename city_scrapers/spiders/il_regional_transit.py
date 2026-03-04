@@ -1,3 +1,4 @@
+from urllib import response
 from city_scrapers_core.constants import NOT_CLASSIFIED
 from city_scrapers_core.items import Meeting
 from city_scrapers_core.spiders import CityScrapersSpider
@@ -9,16 +10,15 @@ class IlRegionalTransitSpider(CityScrapersSpider):
     name = "il_regional_transit"
     agency = "Regional Transportation Authority"
     timezone = "America/Chicago"
-    
-    all_meetings_url = "https://www.rtachicago.org/about-rta/boards-and-committees/meeting-materials?year={year}"
-    upcoming_meetings_url = "https://www.rtachicago.org/about-rta/boards-and-committees/meeting-materials"
+    all_meetings_url = "https://www.rtachicago.org/about-rta/boards-and-committees/meeting-materials?year={year}" # noqa
+    upcoming_meetings_url = "https://www.rtachicago.org/about-rta/boards-and-committees/meeting-materials" # noqa
 
     _location = {
         "name": "RTA Headquarters",
         "address": "175 W. Jackson Blvd., Chicago, IL 60604",
     }
 
-    _time_note = "Check the source link for the most up-to-date information on meeting times and locations."
+    _time_note = "Check the source link for the most up-to-date information on meeting times and locations." # noqa
 
     _start_time = time(9, 0)
 
@@ -29,20 +29,24 @@ class IlRegionalTransitSpider(CityScrapersSpider):
             url=self.upcoming_meetings_url,
             callback=self._get_all_meetings,
         )
+
     def _get_all_meetings(self, response):
-        upcoming_section = response.css(".mx-auto.max-w-screen-2xl.p-6")
+        upcoming_section = response.css(".bg-rtadarkgray-500.w-full.grid.grid-cols-1.p-8.mb-12.border-t-4.border-rtayellow-500") # noqa
         current_year = datetime.now().year
-        print(f"HERE: {upcoming_section}")
         for year in range(current_year - 5, current_year + 1):
-            print(f"YEAR: {year}")
             yield scrapy.Request(
                 url=self.all_meetings_url.format(year=year),
                 callback=self.parse,
+                meta={"upcoming_section": upcoming_section},
             )
+            break
 
     def parse(self, response):
-        print(f"HERE: {response.url}")
-        # for item in response.css(".meetings"):
+        upcoming_meetings = response.meta.get("upcoming_section")
+        meetings = response.css(".grid.grid-cols-1")[0]
+        all_meetings = [upcoming_meetings.getall(), meetings.get()]
+        print(f"MEETINGS: {all_meetings}")
+        # for item in meetings:
         #     meeting = Meeting(
         #         title=self._parse_title(item),
         #         description=self._parse_description(item),
@@ -63,6 +67,7 @@ class IlRegionalTransitSpider(CityScrapersSpider):
 
     def _parse_title(self, item):
         """Parse or generate meeting title."""
+
         return ""
 
     def _parse_description(self, item):
